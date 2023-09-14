@@ -1,4 +1,4 @@
-# README.md
+# Azure Security Workshop
 
 1. Prerequisites
 2. Azure Firewall
