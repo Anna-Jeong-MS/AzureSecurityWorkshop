@@ -9,7 +9,10 @@
     - WAF: Azure 애플리케이션 게이트웨이 배포
     - Azure Firewall 배포
         - Azure Firewall Policy 구성
-4. 시나리오 테스트
+4. Kali Linux 업데이트 및 데스크탑 환경 설치
+    - 방화벽 정책 수정
+    - 리모트 데스크탑 설정
+5. 시나리오 테스트
     
     [시나리오 1. Reconnaissance : Azure WAF 보안 보호 및 감지](https://www.notion.so/1-Reconnaissance-Azure-WAF-833077229bbd4087a31d7c2df932732a?pvs=21)
     
@@ -142,13 +145,62 @@ Azure Firewall 디자인은 기본적으로 명시적 거부입니다. 트래�
 
 —
 
-### Kali Linux 업데이트 및 데스크탑 환경 설치
+## Kali Linux 업데이트 및 데스크탑 환경 설치
+
+### 방화벽 정책 수정
+
+**DNAT 규칙**
+
+1. Azure Portal 검색 상자에서 **방화벽 정책**을 입력하고 **Enter** 키를 누릅니다.
+2. SOC-NS-Policy를 **선택**합니다.
+3. 왼쪽 메뉴에서 규칙 컬렉션을 **선택**합니다.
+4. Add를 **클릭** 후, Rule Collection을 **선택**합니다.
+    - 이름 : Kali-RDP
+    - 규칙 컬렉션 형식 : DNAT
+    - 우선순위 : 104
+    - 규칙 컬렉션 그룹 : DefaultDnatRuleCollectionGroup
+    - 규칙
+        - 이름 : DNATRule
+        - 원본 유형 : IP 주소
+        - 원본 : *
+        - 프로토콜 : TCP
+        - 대상포트 : 33892
+        - 대상 위치(방화벽 PIP 주소) : 방화벽 PIP 주소
+        - 변환된 형식 : IP 주소
+        - 변환된 주소 또는 FQDN : Kali VM IP 주소
+        - 번역된 포트 : 3389
+
+**네트워크 규칙**
+
+1. DefaultNetworkRuleCollectionGroup의 IntraVNETAccess를 **선택**합니다.
+2. 아래 규칙을 추가하고 저장 버튼을 **클릭**합니다.
+    - 규칙
+        - 이름 : Kali-HTTP
+        - 원본 유형 : IP 주소
+        - 원본 : Kali VM IP 주소
+        - 대상 포트 : 80
+        - 대상 유형 : IP 주소
+        - 대상 : *
+
+**애플리케이션 규칙**
+
+1. DefaultApplicationRuleCollectionGroup의 Internet-Access를 **선택**합니다.
+2. 아래 규칙을 추가하고 저장 버튼을 **클릭**합니다.
+    - 규칙
+        - 이름 : Kali-InternetAccess
+        - 원본 유형 : IP 주소
+        - 원본 : Kali VM IP 주소
+        - 대상 포트 : Http:80,Https:443
+        - 대상 유형 : FQDN
+        - 대상 : *
+
+### 리모트 데스크탑 설정
 
 1. 로컬 머신에서 PowerShell을 실행하고 다음 명령을 실행하여 Kali VM에 연결합니다.
 
-    ```bash
-    ssh svradmin@<Azure Firewall의 공용 IP 주소>
-    ```
+   ```bash
+   ssh svradmin@<Azure Firewall의 공용 IP 주소>
+   ```
 
 1. SSH를 통해 Kali VM에 연결되면 다음 명령을 실행하여 Kali Linux 배포판을 업데이트합니다.
     
@@ -180,7 +232,6 @@ Azure Firewall 디자인은 기본적으로 명시적 거부입니다. 트래�
     sudo cat << EOF > /etc/hosts
     127.0.0.1 localhost
     127.0.1.1 kali
+    <애플리케이션 게이트웨이의 공용 IP 주소> juiceshopthruazwaf.com
     EOF
     ```
-    
-    ##
