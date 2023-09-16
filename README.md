@@ -232,6 +232,6 @@ Azure Firewall 디자인은 기본적으로 명시적 거부입니다. 트래�
     sudo cat << EOF > /etc/hosts
     127.0.0.1 localhost
     127.0.1.1 kali
-    <애플리케이션 게이트웨이의 공용 IP 주소> juiceshopthruazwaf.com
+    <애플리케이션 게이트웨이의 공용 IP 주소> juiceshopthruwaf.com
     EOF
     ```
