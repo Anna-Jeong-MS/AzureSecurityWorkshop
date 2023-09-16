@@ -1,18 +1,24 @@
 # README.md
 
-1. Prerequisites
+1. 사전 준비
     - Log Analytics 작업 영역 만들기
-2. Azure Firewall
+    - Azure 구독에 대한 진단 설정 구성
+2. Lab 환경 구성
+    - ARM 템플릿 배포
+3. 보안 리소스 배포
+    - WAF: Azure 애플리케이션 게이트웨이 배포
     - Azure Firewall 배포
+        - Azure Firewall Policy 구성
+4. 시나리오 테스트
+    
+    [시나리오 1. Reconnaissance : Azure WAF 보안 보호 및 감지](https://www.notion.so/1-Reconnaissance-Azure-WAF-833077229bbd4087a31d7c2df932732a?pvs=21)
+    
     - Port Scan
         
         [https://github.com/Azure/Azure-Network-Security/tree/master/Azure Firewall/Alerts - Queries and Alerts/Alert - Firewall Port Scan](https://github.com/Azure/Azure-Network-Security/tree/master/Azure%20Firewall/Alerts%20-%20Queries%20and%20Alerts/Alert%20-%20Firewall%20Port%20Scan)
         
     - Source IP abnormally connects to multiple destinations
     [https://github.com/Azure/Azure-Network-Security/tree/master/Azure Firewall/Alerts - Queries and Alerts/Alert - Firewall Source IP abnormally connects to multiple destinations](https://github.com/Azure/Azure-Network-Security/tree/master/Azure%20Firewall/Alerts%20-%20Queries%20and%20Alerts/Alert%20-%20Firewall%20Source%20IP%20abnormally%20connects%20to%20multiple%20destinations)
-3. Azure WAF
-    - Azure WAF 배포
-    - Reconnaissance : Azure WAF 보안 보호 및 감지
 
 # 실습 내용
 
@@ -46,20 +52,103 @@
 
 이 설정에서는 공격자 머신(Kali VM)의 트래픽이 Azure Firewall을 통해 인터넷으로 라우팅됩니다. 성공적인 공격 경로는 공격자가 악성 데이터를 **OWASP Juice Shop** 웹 애플리케이션으로 직접 전송하여 악용에 성공하는 경로입니다. WAF에서 방어하는 공격 경로는 악성 데이터가 Azure WAF(Azure Application Gateway에서)에 의해 검사되고 웹 애플리케이션에 도달하기 전에 기본 규칙 세트를 사용하여 차단되는 경로를 나타냅니다.
 
-1. 실습 환경을 구성하기 위해 [여기](https://aka.ms/waflabdeploy)를 클릭합니다.
-2. 리소스 그룹에서 `network-security-rg`를 선택합니다.
-3. 아래 Workspace 정보 부분에 앞서 생성한 **Log Analytics 작업 영역 정보**를 입력합니다.
+### ARM 템플릿 배포
+
+1. Azure Portal 검색 창에서 **사용자 지정 템플릿 배포**를 검색한 다음, 사용 가능한 옵션에서 선택합니다.
+2. **편집기에서 사용자 고유의 템플릿 빌드**를 선택하고 [template.json](https://github.com/Anna-Jeong-MS/AzureSecurityWorkshop/blob/main/template.json)의 내용을 복사하여 붙여넣습니다.
+3. 리소스 그룹에서 `network-security-rg`를 선택합니다.
+4. 아래 Workspace 정보 부분에 앞서 생성한 **Log Analytics 작업 영역 정보**를 입력합니다.
     
     ![Untitled](images/Untitled%202.png)
     
+5. 검토+만들기 버튼을 선택하여 유효성 검사에 성공하면 만들기를 선택하여 배포를 합니다.
+
+## 보안 리소스 배포
+
+![Untitled](images/Untitled%203.png)
+
+### WAF: Azure 애플리케이션 게이트 웨이 배포
+
+**웹 애플리케이션 방화벽 (WAF)**
+
+웹 애플리케이션 방화벽은 백엔드 코드를 수정하지 않고도 취약성과 공격으로부터 웹 애플리케이션을 보호하여 애플리케이션 중단, 데이터 손실 및 공격을 방지합니다.
+
+**WAF 정책**
+
+WAF는 WAF 보안 정책을 설정하고 이를 Azure Front Door, Application Gateway 또는 CDN에 적용하여 HTTP 및 HTTP/s 수신기를 통해 구성됩니다.
+
+**WAF: Azure 애플리케이션 게이트웨이**
+
+Application Gateway와 결합된 WAF는 웹 트래픽 부하 분산 장치로 작동하고 백 엔드 풀(VM, VM 확장 집합, IP 주소 및 앱 서비스)에 L3-L7 보안을 제공합니다. 앱 게이트웨이에 대한 자세한 내용을 보려면 [AppGateway 기능](https://docs.microsoft.com/en-us/azure/application-gateway/features) 으로 이동하세요 .
+
+![Untitled](images/Untitled%204.png)
+
+1. Azure Portal 검색 상자에서 **애플리케이션 게이트웨이**을 입력하고 **Enter** 키를 누릅니다.
+2. **SOC-NS-AG-WAFv2**를 선택합니다.
+3. 왼쪽 메뉴에서 **웹 애플리케이션 방화벽**을 선택합니다.
+4. WAF 구성에서 업그레이드를 **선택**합니다.
+5. 이름에 **SOC-NS-AGPolicy**를 입력하고 업그레이드를 **선택**합니다.
+
+**탐지** 모드에서는 공격 이벤트를 기록하는 동안 트래픽이 통과하도록 허용합니다. 이 모드를 사용하면 적절한 조정을 위해 처음에 트래픽 동작을 관찰하고 학습한 다음 예방 모드로 전환할 수 있습니다. 이는 권장되는 구성입니다.
+
+*요청 **본문 크기 (KB)도 여기에서 편집할 수 있으며 제외** 영역 에서 제외할 요청 부분을 구성할 수 있습니다 .*
+
+- **관리형 규칙 세트:** OWASP 상위 취약점 공격 목록입니다. OWASP 3.1 또는 최신 핵심 규칙 세트를 사용합니다.
+- **사용자 정의 규칙:** 캐나다 또는 선택한 지리적 위치의 IP를 차단하려면 *+사용자 정의 규칙 추가를 클릭합니다.*
+    - 맞춤 규칙 이름: 'blockCanada'를 입력하세요.
+    - 상태: **활성화됨,** 규칙 유형: **일치,** 우선순위: **1** 또는 원하는 대로
+    - IF **일치 유형**: 드롭다운- 위치정보
+    - 캐나다를 선택하세요. 둘 이상을 선택할 수 있습니다.
+    - 그런 다음: *트래픽 거부* (또는 사용자 정의 페이지로 리디렉션)를 선택합니다.
+    - 추가를 클릭하세요
+    - 
+
+### Azure Firewall 배포
+
+1. Azure Portal 메뉴 또는 **홈**페이지에서 **리소스 만들기**를 선택합니다.
+2. 검색 상자에 **방화벽**을 입력하고 **Enter** 키를 누릅니다.
+3. **방화벽**을 선택하고 **만들기**를 선택합니다.
+    - 리소스 그룹 : network-security-rg
+    - 인스턴스 정보
+        - 이름 : SOC-NS-FW
+        - 지역 : Korea Central
+        - 방화벽 SKU: 표준
+        - 방화벽 관리 : 방화벽 정책을 사용하여 이 방화벽 관리
+        - Firewall policy: **SOC-NS-Policy**
+        - 가상 네트워크 선택 : 기존 항목 사용
+        - 가상 네트워크 : VN-HUB
+        - 공용 IP 주소 : SOCNSFWPIP
+4. **검토 + 만들기**를 클릭하고 유효성 검사가 통과하면 **만들기** 버튼을 클릭합니다.
+
+### Azure Firewall Policy 구성
+
+POC 시나리오에 대한 보안 허브 VNet의 방화벽 관리자를 통해 관리되는 방화벽 정책이 있습니다.
+
+Azure Firewall Manager를 사용하면 네트워크에서 방화벽을 중앙 집중식으로 관리할 수 있습니다. 이 경우에는 방화벽이 하나만 있습니다. [Azure Firewall Manager에 대한 추가 정보](https://docs.microsoft.com/en-us/azure/firewall-manager/overview)
+
+테스트 배포에서 방화벽 구성에 액세스하려면 다음 안내를 따르세요.
+
+![Untitled](images/Untitled%205.png)
+
+1. Azure Portal 검색 상자에서 **방화벽 정책**을 입력하고 **Enter** 키를 누릅니다.
+2. SOC-NS-Policy를 **선택**합니다.
+
+Azure Firewall 디자인은 기본적으로 명시적 거부입니다. 트래픽에 대한 규칙을 구성할 수 있습니다. 위 이미지에서 볼 수 있듯이 데모의 Azure 방화벽은 다음과 같이 구성되었습니다.
+
+- *2스포크 VNET은 해당 서브넷 간에 직접 연결되어 있지 않습니다.*
+- *테스트를 위해 Bing 및 Google과 같은 검색 엔진의 FQDN을 사용하여 액세스 권한을 부여하고 관리하도록 애플리케이션 규칙이 설정됩니다.*
+- *SMB, RDP 및 SSH 만 허용 하고 다른 모든 것을 거부하는 네트워크 규칙이 구성되었습니다.*
+- *방화벽을 통한 VM 액세스를 위해 고유한 NAT IP로부터의 액세스를 허용하는 DNAT 규칙이 구성되었습니다.*
+
+—
 
 ### Kali Linux 업데이트 및 데스크탑 환경 설치
 
 1. 로컬 머신에서 PowerShell을 실행하고 다음 명령을 실행하여 Kali VM에 연결합니다.
 
-```bash
-ssh svradmin@<Azure Firewall의 공용 IP 주소>
-```
+    ```bash
+    ssh svradmin@<Azure Firewall의 공용 IP 주소>
+    ```
 
 1. SSH를 통해 Kali VM에 연결되면 다음 명령을 실행하여 Kali Linux 배포판을 업데이트합니다.
     
@@ -94,109 +183,4 @@ ssh svradmin@<Azure Firewall의 공용 IP 주소>
     EOF
     ```
     
-    ## Azure WAF
-    
-    ### 정찰 공격
-    
-    공격자는 취약점을 악용하기 전에 일반적으로 애플리케이션별 데이터를 수집하고 잠재적인 취약점을 분석하는 등 대상 웹 애플리케이션을 조사하는 데 시간을 보냅니다. 웹 애플리케이션의 잠재적인 취약점을 식별하기 위해 민감한 보안 데이터를 수집하는 방법 중 하나는 **웹 애플리케이션 보안 취약점 스캐너를 활용하는 것입니다**. 이러한 스캐너는 애플리케이션의 응답 헤더를 분석하여 잠재적인 취약점을 식별할 수 있습니다. 웹 애플리케이션 취약성 스캐너로 수집된 데이터는 공격자가 악용 또는 유출을 위해 테스트, 개발 및 활용할 수 있는 잠재적인 취약성을 드러낼 수 있습니다. 또한 이러한 정찰 활동을 통해 공격자는 나중에 사용할 수 있도록 애플리케이션을 철저하게 이해하고 완벽하게 매핑할 수 있습니다.
-    
-    ### 웹 애플리케이션 취약점 스캐너로 정찰 수행
-    
-    공격자가 가장 먼저 시도하는 것 중 하나는 대상 웹 애플리케이션의 애플리케이션 구성 요소, 프레임워크 및 잠재적인 취약점에 대한 광범위한 이해를 시도하는 것입니다. 이를 수행하는 가장 빠르고 일반적인 방법은 상용 또는 오픈 소스 웹 애플리케이션 취약성 스캐너(보안 스캐너라고도 함)를 사용하여 대상에 대해 인증되지 않은/무단 스캔을 실행하는 것입니다. 이 튜토리얼에서는 대상 웹 애플리케이션에 대해 두 가지 웹 애플리케이션 취약점 스캔을 실행합니다.
-    
-    1. **첫 번째 스캔은** 대상 웹 애플리케이션을 직접 가리킵니다.
-        - URL: http://owaspdirect-<배포 GUID>.azurewebsites.net
-    2. **두 번째 스캔은** Application Gateway에서 Azure WAF로 보호되는 동일한 대상 웹 애플리케이션을 가리킵니다.
-        - URL: [http://juiceshopthruwaf.com](http:)
-    
-    ### 대상 애플리케이션에 대해 웹 애플리케이션 취약점 검사 실행
-    
-    웹 애플리케이션 취약점 스캔을 실행하기 위해 RDP를 사용하여 Kali VM에 연결합니다. 연결되면 Kali Linux 배포판에 번들로 제공되는 다목적 명령줄 오픈 소스 웹 애플리케이션 취약점 검색 도구인 **[Nikto를](https://cirt.net/Nikto2)** 사용합니다 . 대상 웹 애플리케이션을 가리키면 Nikto는 애플리케이션에서 일반적인 취약점을 검색하고 빠른 검토를 위해 터미널 창에 검색 결과를 표시합니다.
-    
-    1. 랩 자격 증명을 사용하여 Kali Linux VM에 로그인합니다.
-    2. [웹 브라우저를 실행하고 URL http://owaspdirect-<deployment guid>.azurewebsites.net을 사용하여 OWASP Juice Shop 웹 사이트에 직접 액세스할 수 있는지 확인하고 URL http://juiceshopthruwaf.com](http:) 을 사용하여 WAF를 통해서도 액세스할 수 있는지 확인하세요.
-    3. **Nikto애플리케이션을웹 애플리케이션 분석 --> 웹 취약점 스캐너 --> Nikto를 클릭합니다.**
-        
-        Web Vulnerability Scanner 의 두 인스턴스를 시작합니다 . 왼쪽 상단에서
-        
-        클릭 한 다음
-        
-    4. 스캔을 시작하려면 다음 명령을 사용하십시오. 열려 있는 각 Nikto 창에 하나씩
-        1. **nikto -h http://owaspdirect-<배포 GUID>.azurewebsites.net**
-        2. **nikto -h [http://juiceshopthruwaf.com](http:)**
-    
-    ### **웹 애플리케이션 취약점 검사 결과 검토**
-    
-    1. Juice Shop 웹사이트로 직접 이동하면 스캐너가 웹 서버에 **7,000개 이상의 요청 1을** 보냈고 그 결과 **2개의 오류** 와 **150개 이상의 항목/문제가** 발견되었으며 이는 추가 공격 및 악용 시나리오를 개발하는 데 사용될 수 있습니다.
-    2. Azure WAF를 통해 Juice Shop 웹 사이트를 스캔하는 동안 1단계에서 웹 사이트를 직접 스캔하는 것과 비교할 때 스캐너가 **요청 수 1을 3배 이상** 생성했지만 여전히 보고할 **오류를 찾지 못한 것을 확인했습니다.** 마찬가지로 이 스캔은 웹사이트를 직접 스캔할 때와 비교하여 추가 조사를 위해 **항목/문제 수의 1%** 미만만 보고할 수 있습니다.
-    
-    ### 통합 문서에서 WAF 로그 검토
-    
-    1. 통합 문서 블레이드로 이동한 다음 이 랩에 배포된 WAF 통합 문서를 선택하여 WAF 통합 문서에 액세스할 수 있습니다. 통합 문서에 들어가면 이벤트 필터에서 적절한 **시간 범위** , **WAF 유형 및 WAF 항목을** 선택했는지 확인하세요.
-    2. **또한 상위 10개 공격 IP 주소, 단일 IP 주소로 필터링** 창 에서 공격자 컴퓨터(Kali VM)에 대한 올바른 공용 IP 주소를 선택했는지 확인해야 합니다 **.**
-    3. 올바른 클라이언트 IP를 선택한 후 다시 통합 문서 상단으로 스크롤하고 WAF 통합 문서 상단의 시각화를 검토합니다. 여기서 사용할 통합 문서의 섹션은 아래 그림에서 알파벳순 설명선으로 강조 표시되어 있으며 다음 섹션에 매핑되는 것을 볼 수 있습니다.
-        1.  WAF 작업 필터
-        2. 차단된 요청 URI 주소 상위 40개, 단일 URI 주소로 필터링
-        3. 상위 50개 이벤트 트리거, 규칙 이름으로 필터링
-        4. 메시지, 전체 세부정보
-    
-    ### 통합 문서 섹션 개요
-    
-    1. **WAF 작업 필터는** 위에서부터 일치 항목 수와 차단된 요청을 표시합니다.
-    
-    ![https://techcommunity.microsoft.com/t5/image/serverpage/image-id/244021iB3265F9696090B44/image-size/large?v=v2&px=999](images/Untitled%203.png)
-    
-    1. 그런 다음 차단된 요청 URI 상위 40개 주소를 확인 **하고 단일 URI 주소로 필터링하여** WAF에 의해 요청이 차단된 상위 URI를 식별 할 수 있습니다.
-    
-    ![https://techcommunity.microsoft.com/t5/image/serverpage/image-id/244022i47A3A89DC0C3673D/image-size/large?v=v2&px=999](images/Untitled%204.png)
-    
-    1. 상위 **50개 이벤트 트리거, 규칙 이름으로 필터링하면** 스캐너 트래픽을 평가한 모든 규칙이 표시됩니다.
-    
-    ![https://techcommunity.microsoft.com/t5/image/serverpage/image-id/244023iBF0DD58B23B1C549/image-size/large?v=v2&px=999](images/Untitled%205.png)
-    
-    - 아래 표는 스캐너 트래픽에 대한 **규칙 이름 출력을 기준으로 필터링한 상위 50개 이벤트 트리거 의 추출을 보여줍니다.**
-        
-        이 데이터는 WAF가 보안 스캐너를 감지하고 Nikto Scanner에서 의심스러운 요청/페이로드를 차단할 수 있었음을 분명히 보여줍니다. 이는 보안 스캐너가 웹 애플리케이션의 보안을 테스트하기 위해 다양한 유형의 작업을 수행하려고 시도하기 때문에 예상되는 현상입니다.
-        
-    
-    | 규칙 | 집계 |
-    | --- | --- |
-    | 보안 스캐너와 연결된 사용자 에이전트를 찾았습니다. | 8906 |
-    | 수락 헤더가 누락된 요청 | 8906 |
-    | 본문 콘텐츠가 포함된 GET 또는 HEAD 요청. | 8860 |
-    | 노드 검증기 블랙리스트 키워드 | 4553 |
-    | SQL 주입 공격: 일반적인 주입 테스트가 감지됨 | 3354 |
-    | 보안 스캐너와 관련된 요청 파일 이름/인수를 찾았습니다. | 2422 |
-    | 가능한 RFI(원격 파일 포함) 공격: 도메인 외부 참조/링크 | 2418 |
-    | 가능한 RFI(원격 파일 포함) 공격: 후행 물음표 문자(?)와 함께 사용된 URL 페이로드 | 2355 |
-    | 기본 SQL 인증 우회 시도 탐지 2/3 | 2249 |
-    | MySQL 주석, 조건 및 ch(a)r 주입을 감지합니다. | 2233 |
-    | 경로 순회 공격(/../) | 1698 |
-    | OS 파일 액세스 시도 | 699 |
-    | 원격 명령 실행: Unix 셸 코드 발견 | 682 |
-    | libinjection을 통해 XSS 공격이 감지되었습니다. | 667 |
-    | SQL 주입 공격: SQL Tautology가 감지되었습니다. | 641 |
-    | 가능한 XSS 공격이 감지됨 - HTML 태그 핸들러 | 616 |
-    | XSS 필터 - 카테고리 1: 스크립트 태그 벡터 | 616 |
-    | NoScript XSS 주입 검사기: HTML 주입 | 616 |
-    | 클래식 SQL 주입 조사 감지 2/3 | 455 |
-    | 요청에 잘못된 문자가 있습니다(인쇄할 수 없는 문자). | 342 |
-    | 요청에 잘못된 문자가 있습니다(널 문자). | 340 |
-    | SQL 주입 공격 | 272 |
-    | 원격 명령 실행: Unix 명령 주입 | 199 |
-    | SQL 주석 시퀀스가 ​​감지되었습니다. | 197 |
-    | URL 파일 확장자는 정책에 의해 제한됩니다. | 192 |
-    | 제한된 파일 액세스 시도 | 178 |
-    | SQL 16진수 인코딩이 확인됨 | 147 |
-    | 가능한 RFI(원격 파일 포함) 공격: URL 페이로드와 함께 사용되는 일반적인 RFI 취약 매개변수 이름 | 136 |
-    | PHP 삽입 공격: 고위험 PHP 함수 호출 발견 | 128 |
-    
-    1. **메시지, 전체 세부정보** 섹션 에서 자세한 내용을 검토하세요.
-    
-    ![https://techcommunity.microsoft.com/t5/image/serverpage/image-id/244426i3C23069AC845EB5A/image-size/large?v=v2&px=999](images/Untitled%206.png)
-    
-    ## 주요 요점
-    
-    보안 스캐너를 사용하여 웹 애플리케이션 취약성 평가 스캔을 수행하여 대상 웹 애플리케이션의 취약성을 노출시키는 것은 공격자가 사용하는 일반적인 기술입니다. 외부 공격자가 웹 애플리케이션에 대해 이러한 스캔을 수행할 수 있으면 애플리케이션 설계와 잠재적으로 악용으로 이어질 수 있는 취약점에 대해 배울 수 있습니다.
-    
-    **이를 통해 보호되는 웹 애플리케이션의 경우 Azure WAF는 기본 규칙 세트를 사용하여 네트워크 에지에서 보안 스캐너로 실행되는 정찰 공격을 감지하고 보호할 수 있습니다.**
+    ##
