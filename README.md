@@ -14,7 +14,7 @@
     - 리모트 데스크탑 설정
 5. 시나리오 테스트
     
-    [시나리오 1. Reconnaissance : Azure WAF 보안 보호 및 감지](https://www.notion.so/1-Reconnaissance-Azure-WAF-833077229bbd4087a31d7c2df932732a?pvs=21)
+    [시나리오 1. Reconnaissance : Azure WAF 보안 보호 및 감지](Scenario1/README.md)
     
     - Port Scan
         
