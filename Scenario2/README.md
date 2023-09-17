@@ -1,7 +1,5 @@
 # Scenario2 : Port Scan
 
-[https://github.com/Azure/Azure-Network-Security/tree/master/Azure Firewall/Alerts - Queries and Alerts/Alert - Firewall Port Scan](https://github.com/Azure/Azure-Network-Security/tree/master/Azure%20Firewall/Alerts%20-%20Queries%20and%20Alerts/Alert%20-%20Firewall%20Port%20Scan)
-
 ### 방화벽 로그 설정
 
 1. Azure Portal 검색 창에서 방화벽를 검색한 다음, 사용 가능한 옵션에서 선택합니다.
