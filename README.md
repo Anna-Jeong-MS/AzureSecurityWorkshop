@@ -14,11 +14,9 @@
     - 리모트 데스크탑 설정
 5. 시나리오 테스트
     
-    [시나리오 1. Reconnaissance : Azure WAF 보안 보호 및 감지](Scenario1/README.md)
+    [Scenario1 : Reconnaissance](Scenario1/README.md)
     
-    - Port Scan
-        
-        [https://github.com/Azure/Azure-Network-Security/tree/master/Azure Firewall/Alerts - Queries and Alerts/Alert - Firewall Port Scan](https://github.com/Azure/Azure-Network-Security/tree/master/Azure%20Firewall/Alerts%20-%20Queries%20and%20Alerts/Alert%20-%20Firewall%20Port%20Scan)
+    [Scenario2 : Port Scan](Scenario2/README.md)
         
     - Source IP abnormally connects to multiple destinations
     [https://github.com/Azure/Azure-Network-Security/tree/master/Azure Firewall/Alerts - Queries and Alerts/Alert - Firewall Source IP abnormally connects to multiple destinations](https://github.com/Azure/Azure-Network-Security/tree/master/Azure%20Firewall/Alerts%20-%20Queries%20and%20Alerts/Alert%20-%20Firewall%20Source%20IP%20abnormally%20connects%20to%20multiple%20destinations)
